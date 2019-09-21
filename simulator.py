@@ -27,15 +27,17 @@ class PlayerState:
 
     def gen_full_state (self):
         poss = [0] * 7
-        for s in range([1, 2, 3]):
-            if (self.softs[s - 1]):
-                poss[s - 1] = 10 + s
+        for s in range(3):
+            if (self.softs[s]):
+                poss[s] = 10
         
         poss[3] = poss[0] + poss[1]
         poss[4] = poss[1] + poss[2]
         poss[5] = poss[2] + poss[0]
         poss[6] = poss[0] + poss[1] + poss[2]
 
+        # Need only three dimensional !!
+        # Just 10, 20, 30
         return (self.sum, poss)
             
     @staticmethod
@@ -52,7 +54,7 @@ class PlayerState:
         if suite == 'B':
             return 1
         else:
-            return 0
+            return -1
 
     @staticmethod
     def __soft_vector (card, suite):
@@ -68,7 +70,7 @@ class PlayerState:
         """
         Printing the state
         """
-        full_state = self.gen_full_state
+        full_state = self.gen_full_state()
         return str(self.sum) + " | " + str(self.softs) + " || " + str(full_state[1])
 
 class State:
@@ -92,7 +94,10 @@ class State:
         expanded_me = self.me.gen_full_state ()
         sums = [(expanded_me[0] + p) for p in expanded_me[1]]
         mx = sums[0]
+        print ("Sums: ", sums)
         for s in sums[1:]:
+            if mx > 31:
+                mx = s
             if s > mx and s < 31:
                 mx = s
         return mx
@@ -122,7 +127,7 @@ class Simulator:
         Initialize
         """
         # Ensure replicability
-        np.seed(0)
+        np.random.seed(0)
 
     def reset (self):
         """
@@ -139,21 +144,22 @@ class Simulator:
         Draw a card
         """
         if np.random.random() > 2 / 3:
-            suite = 'red'
+            suite = 'R'
         else:
-            suite = 'black'
+            suite = 'B'
 
-        card = max(int(np.random.random() * 10 + 1), 10)
+        card = min(int(np.random.random() * 10 + 1), 10)
+        print ("Got: ", card, suite)
         return card, suite
 
-    def step (self, state : State, action : string):
+    def step (self, state : State, action : str):
         """
         Perform action a
         """
         assert (action in ['H', 'S'])
         if action == 'S':
             dealer_sum = self.__play_delear()
-            player_sum = state.me.max_safe_sum()
+            player_sum = state.max_safe_sum()
 
             if dealer_sum < 0 or dealer_sum > 31:
                 # Bust dealer
@@ -170,7 +176,7 @@ class Simulator:
             # Draw a card and update
             card, suite = self.draw()
             state.update_state (card, suite)
-            player_sum = state.me.max_safe_sum()
+            player_sum = state.max_safe_sum()
             if (player_sum < 0 or player_sum > 31):
                 # Bust player
                 return state, -1, True
@@ -190,7 +196,17 @@ if __name__ == '__main__':
     Testing the simulator
     """
     sim = Simulator()
+
+    time = 0
     state = sim.reset()
+    reward, done = 0, False
+    print (time)
     print (state)
 
-    
+    while not done:
+        print(' ')
+        time += 1
+        state, reward, done = sim.step(state, 'H')
+        print (time)
+        print (state)
+        print (reward, done)
