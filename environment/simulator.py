@@ -14,19 +14,26 @@ class State:
         self.me = create (player_card, player_suite)
         self.dealer = create (dealer_card, dealer_suite)
 
-    def update_state (self, card, suite):
+    def update_state (self, card, suite, dealer=False):
         """
         Update the player state
         """
-        self.me = next_state (self.me, card, suite)
+        if not dealer:
+            self.me = next_state (self.me, card, suite)
+        else:
+            self.dealer = next_state (self.dealer, card, suite)
 
-    def max_safe_sum (self):
+    def max_safe_sum (self, dealer=False):
         """
         The max possible safe sum the player can get in the current state
         safe sum is defined as a sum between 0 to 31 (inclusive)
         Returns either a positive number or -1 denoting bust
         """
-        possibilities = get_full_state (self.me)
+        if not dealer:
+            possibilities = get_full_state (self.me)
+        else:
+            possibilities = get_full_state (self.dealer)
+            
         possibilities = [p for p in possibilities if 0 <= p <= 31]
         
         if len(possibilities) == 0:
@@ -38,7 +45,7 @@ class State:
         """
         Printing the state
         """
-        return "Player: " + printable_state(self.me) + "\nDealer: " + printable_state(self.dealer) + "\n"
+        return "Player: " + printable_state(self.me) + "\nDealer: " + printable_state(self.dealer)
 
 
 class Action:
@@ -104,7 +111,6 @@ class Simulator:
             suite = 'B'
 
         card = min(int(np.random.random() * 10 + 1), 10)
-        print ("Got: ", card, suite)
         return card, suite
 
     def step (self, state : State, action : str):
@@ -113,7 +119,7 @@ class Simulator:
         """
         assert (action in ['H', 'S'])
         if action == 'S':
-            dealer_sum = self.__play_delear()
+            dealer_sum = self.__play_delear(state)
             player_sum = state.max_safe_sum()
 
             if dealer_sum < 0 or dealer_sum > 31:
@@ -139,11 +145,19 @@ class Simulator:
                 # Safe player
                 return state, 0, False
 
-    def __play_delear(self):
+    def __play_delear(self, state : State):
         """
         Play as dealer until death
         """
-        return 27
+        print ("Playing as dealer")
+        dealer_sum = state.max_safe_sum(dealer=True)
+        while (0 <= dealer_sum < 25):
+            # Keep hitting
+            card, suite = self.draw()
+            state.update_state (card, suite, dealer=True)
+            dealer_sum = state.max_safe_sum(dealer=True)
+
+        return dealer_sum
 
 
 if __name__ == '__main__':
