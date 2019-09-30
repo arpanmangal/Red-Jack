@@ -3,110 +3,42 @@ Simulator for the game of RedJack
 """
 
 import numpy as np
+from player import create, next_state, get_full_state, printable_state
 
-class PlayerState:
-    """
-    The representation of one of the Players in the game
-    """
-    def __init__ (self, card, suite):
-        PlayerState.__valid_card (card, suite)
-        self.sum = card * PlayerState.__suite_score (suite)
-        self.softs = PlayerState.__soft_vector (card, suite)
-
-    def update_state (self, card, suite):
-        PlayerState.__valid_card (card, suite)
-        self.sum += card * PlayerState.__suite_score (suite)
-        self.__update_softs (card, suite)
-
-    def __update_softs (self, card, suite):
-        if (suite == 'B'):
-            v = list(self.softs)
-            if (1 <= card <= 3):
-                v[card - 1] = True
-            self.softs = tuple(v)
-
-    def gen_full_state (self):
-        poss = [0] * 7
-        for s in range(3):
-            if (self.softs[s]):
-                poss[s] = 10
-        
-        poss[3] = poss[0] + poss[1]
-        poss[4] = poss[1] + poss[2]
-        poss[5] = poss[2] + poss[0]
-        poss[6] = poss[0] + poss[1] + poss[2]
-
-        # Need only three dimensional !!
-        # Just 10, 20, 30
-        return (self.sum, poss)
-            
-    @staticmethod
-    def __valid_card (card, suite):
-        """
-        The card should belong to 1-10
-        with suite either 'B' or 'R'
-        """
-        assert (1 <= card <= 10)
-        assert (suite in ['B', 'R'])
-
-    @staticmethod
-    def __suite_score (suite):
-        if suite == 'B':
-            return 1
-        else:
-            return -1
-
-    @staticmethod
-    def __soft_vector (card, suite):
-        if (suite == 'R'):
-            return (False, False, False)
-        else:
-            v = [False, False, False]
-            if (1 <= card <= 3):
-                v[card - 1] = True
-            return tuple (v)
-
-    def __str__(self):
-        """
-        Printing the state
-        """
-        full_state = self.gen_full_state()
-        return str(self.sum) + " | " + str(self.softs) + " || " + str(full_state[1])
 
 class State:
     """
     State of the Agent
     """
     def __init__ (self, player_card, player_suite, dealer_card, dealer_suite):
-        self.me = PlayerState (player_card, player_suite)
-        self.dealer = PlayerState (dealer_card, dealer_suite)
+        self.me = create (player_card, player_suite)
+        self.dealer = create (dealer_card, dealer_suite)
 
     def update_state (self, card, suite):
         """
         Update the player state
         """
-        self.me.update_state (card, suite)
+        self.me = next_state (self.me, card, suite)
 
     def max_safe_sum (self):
         """
         The max possible safe sum the player can get in the current state
+        safe sum is defined as a sum between 0 to 31 (inclusive)
+        Returns either a positive number or -1 denoting bust
         """
-        expanded_me = self.me.gen_full_state ()
-        sums = [(expanded_me[0] + p) for p in expanded_me[1]]
-        mx = sums[0]
-        print ("Sums: ", sums)
-        for s in sums[1:]:
-            if mx > 31:
-                mx = s
-            if s > mx and s < 31:
-                mx = s
-        return mx
+        possibilities = get_full_state (self.me)
+        possibilities = [p for p in possibilities if 0 <= p <= 31]
+        
+        if len(possibilities) == 0:
+            return -1
+        else:
+            return possibilities[-1]
 
     def __str__(self):
         """
         Printing the state
         """
-        return "Player: " + self.me.__str__() + "\nDealer: " + self.dealer.__str__()
+        return "Player: " + printable_state(self.me) + "\nDealer: " + printable_state(self.dealer) + "\n"
 
 
 class Action:
@@ -118,6 +50,19 @@ class Action:
         self.action = action
 
 
+class GameEndError(Exception):
+    """
+    When game ends at the first draw
+    """
+    def __init__ (self, message, payload):
+        assert (payload in ['draw', 'lose', 'win'])
+        self.message = message
+        self.payload = payload
+
+    def __str__(self):
+        return str(self.message)
+
+    
 class Simulator:
     """
     The simulator
@@ -137,13 +82,23 @@ class Simulator:
         dealer_card, dealer_suite = self.draw()
         state = State (player_card, player_suite,
             dealer_card, dealer_suite)
+
+        # Raise custom errors if the game finished due to
+        # one or more players getting a negative card
+        if (player_suite == 'R' and dealer_suite == 'R'):
+            raise GameEndError("Game is Draw", 'draw')
+        elif (player_suite == 'R'):
+            raise GameEndError("Dealer has won", 'lose')
+        elif (dealer_suite == 'R'):
+            raise GameEndError("Player has won", 'win')
+        
         return state
 
     def draw (self):
         """
         Draw a card
         """
-        if np.random.random() > 2 / 3:
+        if np.random.random() < 1 / 3:
             suite = 'R'
         else:
             suite = 'B'
