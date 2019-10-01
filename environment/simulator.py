@@ -41,6 +41,36 @@ class State:
         else:
             return possibilities[-1]
 
+    def state_rep (self):
+        """
+        Return the representative state
+        It is a tuple: (table_no, dealer_card, player_max)
+        table_no: one of 0, 1, 2, 3 corresponding to number of special cards used
+        dealer_card: 1-10 current dealer card (Note: Can never be negative)
+        player_max: max_safe_sum
+        """
+
+        # Computing dealer_card
+        dealer_card = self.dealer[0]
+
+        # Compute player_max
+        player_max = self.max_safe_sum()
+
+        # State should not be bust
+        assert (1 <= dealer_card <= 10)
+        assert (player_max >= 0)
+
+        # Compute table number
+        possibilities = get_full_state (self.me)
+        possibilities = [p for p in possibilities if 0 <= p <= 31]
+
+        table_no = 0
+        for idx, p in enumerate(possibilities):
+            if 0 <= p <= 31:
+                table_no = idx
+
+        return (table_no, dealer_card, player_max)
+
     def __str__(self):
         """
         Printing the state
@@ -87,9 +117,7 @@ class Simulator:
         """
         player_card, player_suite = self.draw()
         dealer_card, dealer_suite = self.draw()
-        state = State (player_card, player_suite,
-            dealer_card, dealer_suite)
-
+        
         # Raise custom errors if the game finished due to
         # one or more players getting a negative card
         if (player_suite == 'R' and dealer_suite == 'R'):
@@ -98,6 +126,10 @@ class Simulator:
             raise GameEndError("Dealer has won", 'lose')
         elif (dealer_suite == 'R'):
             raise GameEndError("Player has won", 'win')
+
+        # Create state
+        state = State (player_card, player_suite,
+            dealer_card, dealer_suite)
         
         return state
 

@@ -7,6 +7,7 @@ def create (card, suite):
     """
     Create a player state
     """
+    assert (suite == 'B')
     __valid_card (card, suite)
     sum = card * __suite_score (suite)
     softs = __soft_vector (card, suite)
@@ -82,4 +83,3 @@ def __update_soft_vector (soft, card, suite):
         if (1 <= card <= 3):
             soft[card - 1] = True
         return soft
-        
