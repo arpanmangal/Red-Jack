@@ -7,7 +7,7 @@ from environment.simulator import Simulator, GameEndError
 from qpitables import *
 
 
-def montecarlo (PItable, first_visit=False, num_episodes=50000, progess_check=10000,
+def montecarlo (PItable, first_visit=False, num_episodes=5000, progess_check=1000,
                 plot=None, EPSILON=1e-5):
     """
     Given a policy pi, runs monte-carlo method
@@ -99,7 +99,7 @@ def generate_episode (sim, PItable):
 if __name__ == '__main__':
     PItable = create_pi_table ()
 
-    montecarlo (PItable, plot='plots/MC')
+    montecarlo (PItable, plot='plots/MC', num_episodes=500000, progess_check=50000)
     # sim = Simulator ()
 
     # for e in range (10):

@@ -7,6 +7,8 @@ import numpy as np
 import os
 from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
+from matplotlib import cm
+
 
 def create_q_table ():
     def __empty_q_table ():
@@ -86,7 +88,10 @@ def plot_Qtable (Qtable, title='', path=None, name='State Value'):
     fig = plt.figure(figsize=(18.0, 15.0))
     def plot_3d (X, Y, Z, title, loc=111):
         ax = fig.add_subplot(loc, projection='3d')
-        ax.plot_wireframe(X, Y, Z)
+        surf = ax.plot_surface(X, Y, Z, cmap=cm.RdYlGn,
+                       linewidth=0, antialiased=False,
+                       vmin=-1, vmax=1)
+        fig.colorbar(surf, shrink=0.5, aspect=5)
         
         ax.set_xlabel('Dealer Card')
         ax.set_ylabel('Player max. sum')
@@ -113,13 +118,15 @@ def plot_PItable (PItable, title='', path=None, name='Policy'):
     fig = plt.figure(figsize=(18.0, 15.0))
     def plot_3d (X, Y, Z, title, loc=111):
         ax = fig.add_subplot(loc, projection='3d')
-        ax.plot_wireframe(X, Y, Z)
+        surf = ax.plot_surface(X, Y, Z, cmap=cm.RdYlGn,
+                       linewidth=0, antialiased=False,
+                       vmin=0, vmax=1)
         
         ax.set_xlabel('Dealer Card')
         ax.set_ylabel('Player max. sum')
         ax.set_zlabel('Pi')
-        ax.set_zticks([-1, 0, 1])
-        ax.set_zlim([-2, 2])
+        ax.set_zticks([0, 1])
+        ax.set_zlim([-1, 2])
         ax.set_title(title)
 
     def int_table (pi_table):
