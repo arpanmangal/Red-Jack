@@ -7,16 +7,20 @@ from environment.simulator import Simulator, GameEndError
 from qpitables import *
 
 
-def montecarlo (PItable, first_visit=False, num_episodes=50000, progess_check=10000, plot=False, EPSILON=1e-5):
+def montecarlo (PItable, first_visit=False, num_episodes=50000, progess_check=10000,
+                plot=None, EPSILON=1e-5):
     """
     Given a policy pi, runs monte-carlo method
     and do policy-evaluation to compute the 
     value of the policy, until the value converges
 
     progess_check: Check convergence after each 100 iterations
-    plot: whether or not to generate plots
+    plot: Path of folder to save the plots
     EPSILON: used for convergence checking
     """
+
+    # Visualizing the policy
+    plot_PItable (PItable, title='Monte-Carlo policy', path=plot, name='MC Policy')
 
     # Create the simulator
     sim = Simulator()
@@ -48,7 +52,8 @@ def montecarlo (PItable, first_visit=False, num_episodes=50000, progess_check=10
         episode_number += 1  
         if (episode_number % progess_check == 0):
             print ("Episode Number: ", episode_number)
-            plot_Qtable (Qtable, title="Monte-Carlo -- episode %s" % episode_number)
+            plot_Qtable (Qtable, title="Monte-Carlo -- episode %s" % episode_number,
+                         path=plot, name='MC Value -- episode %s' % episode_number)
             if (episode_number >= num_episodes):
             # if has_converged (Qtable, Qtable_prev, EPSILON):
                 break
@@ -94,7 +99,7 @@ def generate_episode (sim, PItable):
 if __name__ == '__main__':
     PItable = create_pi_table ()
 
-    montecarlo (PItable)
+    montecarlo (PItable, plot='plots/MC')
     # sim = Simulator ()
 
     # for e in range (10):
