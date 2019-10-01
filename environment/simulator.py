@@ -3,7 +3,7 @@ Simulator for the game of RedJack
 """
 
 import numpy as np
-from player import create, next_state, get_full_state, printable_state
+from .player import create, next_state, get_full_state, printable_state
 
 
 class State:
@@ -58,7 +58,7 @@ class State:
 
         # State should not be bust
         assert (1 <= dealer_card <= 10)
-        assert (player_max >= 0)
+        assert (0 <= player_max <=  31)
 
         # Compute table number
         possibilities = get_full_state (self.me)
@@ -68,7 +68,8 @@ class State:
         for idx, p in enumerate(possibilities):
             if 0 <= p <= 31:
                 table_no = idx
-
+        assert 0 <= table_no <= 3
+        
         return (table_no, dealer_card, player_max)
 
     def __str__(self):
@@ -181,7 +182,7 @@ class Simulator:
         """
         Play as dealer until death
         """
-        print ("Playing as dealer")
+        # print ("Playing as dealer")
         dealer_sum = state.max_safe_sum(dealer=True)
         while (0 <= dealer_sum < 25):
             # Keep hitting

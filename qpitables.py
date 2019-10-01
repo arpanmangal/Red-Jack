@@ -12,7 +12,9 @@ def create_q_table ():
     def __empty_q_table ():
         return np.zeros((4, 32, 10))
 
-    return __empty_q_table()
+    Qtable = __empty_q_table()
+    Qtable[:,31,:] = 1
+    return Qtable
 
 
 def create_pi_table ():
