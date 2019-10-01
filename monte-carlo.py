@@ -7,7 +7,7 @@ from environment.simulator import Simulator, GameEndError
 from qpitables import *
 
 
-def montecarlo (PItable, first_visit=False, num_episodes=5000, progess_check=1000, plot=False, EPSILON=1e-5):
+def montecarlo (PItable, first_visit=False, num_episodes=50000, progess_check=10000, plot=False, EPSILON=1e-5):
     """
     Given a policy pi, runs monte-carlo method
     and do policy-evaluation to compute the 
@@ -48,7 +48,7 @@ def montecarlo (PItable, first_visit=False, num_episodes=5000, progess_check=100
         episode_number += 1  
         if (episode_number % progess_check == 0):
             print ("Episode Number: ", episode_number)
-            plot_q_table (Qtable, title="Monte-Carlo -- episode %s" % episode_number)
+            plot_Qtable (Qtable, title="Monte-Carlo -- episode %s" % episode_number)
             if (episode_number >= num_episodes):
             # if has_converged (Qtable, Qtable_prev, EPSILON):
                 break
