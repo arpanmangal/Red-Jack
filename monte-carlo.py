@@ -7,13 +7,13 @@ from environment.simulator import Simulator, GameEndError
 from qpitables import *
 
 
-def montecarlo (PItable, first_visit=False, convergence_check=50, plot=False, EPSILON=1e-5):
+def montecarlo (PItable, first_visit=False, num_episodes=5000, progess_check=1000, plot=False, EPSILON=1e-5):
     """
     Given a policy pi, runs monte-carlo method
     and do policy-evaluation to compute the 
     value of the policy, until the value converges
 
-    convergence_check: Check convergence after each 100 iterations
+    progess_check: Check convergence after each 100 iterations
     plot: whether or not to generate plots
     EPSILON: used for convergence checking
     """
@@ -23,7 +23,7 @@ def montecarlo (PItable, first_visit=False, convergence_check=50, plot=False, EP
 
     # Generate an empty q table
     Qtable = create_q_table ()
-    Qtable_prev = copy.deepcopy(Qtable) # Used for convergence testing later
+    # Qtable_prev = copy.deepcopy(Qtable) # Used for convergence testing later
 
     VisitCount = create_q_table ()
 
@@ -46,11 +46,14 @@ def montecarlo (PItable, first_visit=False, convergence_check=50, plot=False, EP
             modify_q_table (VisitCount, state, new_count)
 
         episode_number += 1  
-        if (episode_number % convergence_check == 0):
-            if has_converged (Qtable, Qtable_prev, EPSILON):
+        if (episode_number % progess_check == 0):
+            print ("Episode Number: ", episode_number)
+            plot_q_table (Qtable, title="Monte-Carlo -- episode %s" % episode_number)
+            if (episode_number >= num_episodes):
+            # if has_converged (Qtable, Qtable_prev, EPSILON):
                 break
-            else:
-                Qtable_prev = copy.deepcopy(Qtable)
+            # else:
+                # Qtable_prev = copy.deepcopy(Qtable)
 
 
 def generate_episode (sim, PItable):
@@ -91,9 +94,10 @@ def generate_episode (sim, PItable):
 if __name__ == '__main__':
     PItable = create_pi_table ()
 
-    sim = Simulator ()
+    montecarlo (PItable)
+    # sim = Simulator ()
 
-    for e in range (10):
-        # Create episode
-        print (generate_episode(sim ,PItable))
-        print()
+    # for e in range (10):
+    #     # Create episode
+    #     print (generate_episode(sim ,PItable))
+    #     print()
