@@ -87,14 +87,16 @@ if __name__ == '__main__':
     def run_td (K):
         # Run the TD learning for k values in K
         runs = 100
-        num_episodes = 10000
+        num_episodes = 1000
         k = K
         alpha = 0.1
 
         Qtable = create_q_table()
+        Qshape = Qtable.shape
         print ("Running %d runs" % runs)
         for r in tqdm(range(runs)):
             Qtable = (r / (r+1)) * Qtable + (1 / (r+1)) * temporaldifference (sim, PItable, alpha=alpha, k=k, num_episodes=num_episodes)
+            assert (Qtable.shape == Qshape)
             # Take a deep breath
             time.sleep(1)
 
