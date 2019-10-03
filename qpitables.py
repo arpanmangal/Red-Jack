@@ -35,9 +35,15 @@ def create_pi_table ():
 def create_qsa_table ():
     Htable = create_q_table()
     Stable = create_q_table()
-    Htable[:,25:,:] = -0.5; Htable[:,31,:] = -0.5
-    Stable[:,25:,:] = 0.5; Stable[:,31,:] = 0.9
-    Htable[:,:25,:] = 0.1; Stable[:,:25,:] = -0.1
+    Htable[:,:,:] = Stable[:,:,:] = 0
+
+    # Stable[:,:25,:] = -0.1; Htable[:,:25,:] = 0.1
+    # Htable[:25:,:] = 0.1; Htable[:,25:,:] = -0.1
+    # Stable[:,31,:] = 0.9; Htable[:,31,:] = -0.9
+    # Stable[:,:25,:] = -0.1; Stable[:,31,:] = 0.5
+    # Htable[:,25:,:] = -0.1; Htable[:,31,:] = -0.5
+    # Stable[:,25:,:] = 0.5; Stable[:,31,:] = 0.9
+    # Htable[:,:25,:] = 0.1; Stable[:,:25,:] = -0.1
     # np.random.seed(0)
     # Htable[:,:,:] = np.random.rand(4, 32, 10)
     # Stable[:,:,:] = np.random.rand(4, 32, 10)
@@ -210,16 +216,24 @@ def plot_QSAtable (QSAtable, title='', path=None, name='QSA table', show=False):
     plt.close('all')
     
 
+def plot_curves (X=[], Y=[], colors=None):
+    for x, y in zip(X, Y):
+        plt.plot(x, y)
+    plt.show()
 
 if __name__ == '__main__':
     # Test the table generation
     # Qtable = create_q_table()
-    PItable = create_pi_table()
-    plot_PItable (PItable)
+    # PItable = create_pi_table()
+    # plot_PItable (PItable)
     # modify_q_table (Qtable, (0, 1, 26), 0.5)
     # modify_pi_table (PItable, (0, 1, 26), 'H')
     # print (Qtable)
     # plot_Qtable (Qtable)
 
     # exit(0)
+
+    x = [1,3,7]
+    y = [1,9,49]
+    plot_curves([x], [y])
 
