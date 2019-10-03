@@ -81,7 +81,7 @@ def modify_pi_table(PItable, state, action):
 #     return np.sum(abs(q_table1 - q_table2)) + np.sum(abs(qc_table1 - qc_table2)) < epsilon
 
 
-def plot_Qtable (Qtable, title='', path=None, name='State Value'):
+def plot_Qtable (Qtable, title='', path=None, name='State Value', show=False):
     X = np.array( list(range(1,11))*32 ).reshape(32, 10)
     Y = np.array( list(range(0,32))*10 ).reshape(10, 32).T
 
@@ -109,9 +109,12 @@ def plot_Qtable (Qtable, title='', path=None, name='State Value'):
 
     if path is not None:
         plt.savefig(os.path.join(path, name), dpi=100)
-    plt.show()
+    if show:
+        plt.show()
+    plt.close('all')
 
-def plot_PItable (PItable, title='', path=None, name='Policy'):
+
+def plot_PItable (PItable, title='', path=None, name='Policy', show=False):
     X = np.array( list(range(1,11))*32 ).reshape(32, 10)
     Y = np.array( list(range(0,32))*10 ).reshape(10, 32).T
 
@@ -143,7 +146,10 @@ def plot_PItable (PItable, title='', path=None, name='Policy'):
 
     if path is not None:
         plt.savefig(os.path.join(path, name), dpi=100)
-    plt.show()
+    if show:
+        plt.show()
+    plt.close('all')
+    
 
 if __name__ == '__main__':
     # Test the table generation

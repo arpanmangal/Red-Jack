@@ -2,40 +2,27 @@
 Using Temporal Difference method for policy evaluation
 """
 
-import copy
+from tqdm import tqdm
+import time
 from environment.simulator import Simulator, GameEndError
 from qpitables import *
 
-
-def temporaldifference (PItable, k=1, alpha=0.1, decay=None, num_episodes=500, progess_check=100,
-                plot=None, EPSILON=1e-5):
+def temporaldifference (sim, PItable, k=1, alpha=0.1, decay=None, num_episodes=100):
     """
     Given a policy pi, runs TD(k) method
     and do policy-evaluation to compute the 
     value of the policy, until the value converges
-
-    decay: array of episode_number, to decrease alpha by 2 at these points
-    progess_check: Check convergence after each 100 iterations
-    plot: Path of folder to save the plots
-    EPSILON: used for convergence checking
     """
 
     # Visualizing the policy
     plot_PItable (PItable, title='Temporal-Difference policy', path=plot, name='TD Policy')
 
-    # Create the simulator
-    sim = Simulator()
-
     # Generate an empty q table
     Qtable = create_q_table ()
-    # Qtable_prev = copy.deepcopy(Qtable) # Used for convergence testing later
 
-    episode_number = 0
-    while True:
+    for e in range(num_episodes):
         episode = generate_episode (sim, PItable)
-        # states, actions, rewards = episode
         states, final_reward = episode
-        # final_reward = rewards[-1]
 
         for idx, state in enumerate(states):
             if idx + k < len(states):
@@ -49,18 +36,7 @@ def temporaldifference (PItable, k=1, alpha=0.1, decay=None, num_episodes=500, p
             # Update the values
             modify_q_table (Qtable, state, new_value)
 
-        episode_number += 1
-        if decay is not None and episode_number in decay:
-            alpha = alpha / 2 
-        if (episode_number % progess_check == 0):
-            print ("Episode Number: ", episode_number)
-            plot_Qtable (Qtable, title="Temporal-Difference -- episode %s" % episode_number,
-                         path=plot, name='TD Value -- episode %s' % episode_number)
-            if (episode_number >= num_episodes):
-            # if has_converged (Qtable, Qtable_prev, EPSILON):
-                break
-            # else:
-                # Qtable_prev = copy.deepcopy(Qtable)
+    return Qtable
 
 
 def generate_episode (sim, PItable):
@@ -69,8 +45,6 @@ def generate_episode (sim, PItable):
     """
 
     states = []
-    # actions = []
-    # rewards = []
 
     def generate_initial_state ():
         try:
@@ -86,25 +60,48 @@ def generate_episode (sim, PItable):
         s = state.state_rep()
         action = index_table(PItable, s)
         states.append(s)
-        # actions.append(action)
 
         # Take action
         state, reward, done = sim.step(state, action)
-        # rewards.append(reward)
 
     assert (len(states) > 0)
 
-    # return (states, actions, rewards)
     return states, reward
 
 
 if __name__ == '__main__':
+    # Create the simulator
+    sim = Simulator()
+
+    # Running Parameters
+    runs = 100
+    num_episodes = 1000 # Number of episodes in each run
+    alpha = 0.1
+    k = 3
     PItable = create_pi_table ()
+    plot='plots/TD' # Directory where to save plots
 
-    temporaldifference (PItable, plot='plots/TD', k=1000, alpha=0.1, decay=[10000, 100000], num_episodes=200000, progess_check=40000)
-    # sim = Simulator ()
+    # Visualizing the policy
+    plot_PItable (PItable, title='TD policy', path=plot, name='TD Policy')
 
-    # for e in range (10):
-    #     # Create episode
-    #     print (generate_episode(sim ,PItable))
-    #     print()
+    def run_td (K):
+        # Run the TD learning for k values in K
+        runs = 100
+        num_episodes = 10000
+        k = K
+        alpha = 0.1
+
+        Qtable = create_q_table()
+        print ("Running %d runs" % runs)
+        for r in tqdm(range(runs)):
+            Qtable = (r / (r+1)) * Qtable + (1 / (r+1)) * temporaldifference (sim, PItable, alpha=alpha, k=k, num_episodes=num_episodes)
+            # Take a deep breath
+            time.sleep(1)
+
+        name = 'TD -- %d RUNS -- %d EPISODES -- k = %d' % (runs, num_episodes, K)
+        plot_Qtable(Qtable, title=name, path=plot, name=name)
+
+    Ks = [1, 3, 5, 10, 100, 1000]
+    for K in Ks:
+        print ("Running for K = %d" % K)
+        run_td (K)

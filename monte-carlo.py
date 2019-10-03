@@ -2,7 +2,6 @@
 Using monte-carlo method for policy evaluation
 """
 
-import copy
 from tqdm import tqdm
 from environment.simulator import Simulator, GameEndError
 from qpitables import *
