@@ -3,40 +3,26 @@ Using monte-carlo method for policy evaluation
 """
 
 import copy
+from tqdm import tqdm
 from environment.simulator import Simulator, GameEndError
 from qpitables import *
 
 
-def montecarlo (PItable, first_visit=False, num_episodes=5000, progess_check=1000,
-                plot=None, EPSILON=1e-5):
+def montecarlo (sim, PItable, first_visit=False, num_episodes=100):
     """
     Given a policy pi, runs monte-carlo method
     and do policy-evaluation to compute the 
     value of the policy, until the value converges
-
-    progess_check: Check convergence after each 100 iterations
-    plot: Path of folder to save the plots
-    EPSILON: used for convergence checking
     """
-
-    # Visualizing the policy
-    plot_PItable (PItable, title='Monte-Carlo policy', path=plot, name='MC Policy')
-
-    # Create the simulator
-    sim = Simulator()
 
     # Generate an empty q table
     Qtable = create_q_table ()
-    # Qtable_prev = copy.deepcopy(Qtable) # Used for convergence testing later
 
     VisitCount = create_q_table ()
 
-    episode_number = 0
-    while True:
+    for e in range(num_episodes):
         episode = generate_episode (sim, PItable)
-        # states, actions, rewards = episode
         states, final_reward = episode
-        # final_reward = rewards[-1]
 
         for state in states:
             old_value = index_table(Qtable, state)
@@ -49,16 +35,7 @@ def montecarlo (PItable, first_visit=False, num_episodes=5000, progess_check=100
             modify_q_table (Qtable, state, new_value)
             modify_q_table (VisitCount, state, new_count)
 
-        episode_number += 1  
-        if (episode_number % progess_check == 0):
-            print ("Episode Number: ", episode_number)
-            plot_Qtable (Qtable, title="Monte-Carlo -- episode %s" % episode_number,
-                         path=plot, name='MC Value -- episode %s' % episode_number)
-            if (episode_number >= num_episodes):
-            # if has_converged (Qtable, Qtable_prev, EPSILON):
-                break
-            # else:
-                # Qtable_prev = copy.deepcopy(Qtable)
+    return Qtable
 
 
 def generate_episode (sim, PItable):
@@ -67,8 +44,6 @@ def generate_episode (sim, PItable):
     """
 
     states = []
-    # actions = []
-    # rewards = []
 
     def generate_initial_state ():
         try:
@@ -84,25 +59,35 @@ def generate_episode (sim, PItable):
         s = state.state_rep()
         action = index_table(PItable, s)
         states.append(s)
-        # actions.append(action)
 
         # Take action
         state, reward, done = sim.step(state, action)
-        # rewards.append(reward)
 
     assert (len(states) > 0)
 
-    # return (states, actions, rewards)
     return states, reward
 
 
 if __name__ == '__main__':
+    # Create the simulator
+    sim = Simulator()
+
+
+    # Running Parameters
+    runs = 1000
+    num_episodes = 10000 # Number of episodes in each run
     PItable = create_pi_table ()
+    plot='plots/MC' # Directory where to save plots
 
-    montecarlo (PItable, plot='plots/MC', num_episodes=500000, progess_check=50000)
-    # sim = Simulator ()
+    # Visualizing the policy
+    plot_PItable (PItable, title='Monte-Carlo policy', path=plot, name='MC Policy')
+    
+    Qtable = create_q_table()
+    print ("Running %d runs" % runs)
+    for r in tqdm(range(runs)):
+        table_r = (montecarlo (sim, PItable, num_episodes=num_episodes))
 
-    # for e in range (10):
-    #     # Create episode
-    #     print (generate_episode(sim ,PItable))
-    #     print()
+        Qtable = (r / (r+1)) * Qtable + (1 / (r+1)) * table_r
+
+    name = 'MC -- %d RUNS -- %d EPISODES' % (runs, num_episodes)
+    plot_Qtable(Qtable, title=name, path=plot, name=name)
