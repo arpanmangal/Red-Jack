@@ -62,14 +62,15 @@ class State:
 
         # Compute table number
         possibilities = get_full_state (self.me)
-        possibilities = [p for p in possibilities if 0 <= p <= 31]
+        # possibilities = [p for p in possibilities if 0 <= p <= 31]
 
         table_no = 0
         for idx, p in enumerate(possibilities):
             if 0 <= p <= 31:
                 table_no = idx
         assert 0 <= table_no <= 3
-        
+
+        # print (possibilities)
         return (table_no, dealer_card, player_max)
 
     def __str__(self):
