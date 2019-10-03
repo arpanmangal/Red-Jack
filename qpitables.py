@@ -40,6 +40,7 @@ def create_qsa_table ():
     # Stable[:,:25,:] = -0.1; Htable[:,:25,:] = 0.1
     # Htable[:25:,:] = 0.1; Htable[:,25:,:] = -0.1
     # Stable[:,31,:] = 0.9; Htable[:,31,:] = -0.9
+
     # Stable[:,:25,:] = -0.1; Stable[:,31,:] = 0.5
     # Htable[:,25:,:] = -0.1; Htable[:,31,:] = -0.5
     # Stable[:,25:,:] = 0.5; Stable[:,31,:] = 0.9
@@ -48,6 +49,23 @@ def create_qsa_table ():
     # Htable[:,:,:] = np.random.rand(4, 32, 10)
     # Stable[:,:,:] = np.random.rand(4, 32, 10)
     return np.array([Htable, Stable])
+
+
+def derive_pi_table (QSAtable):
+    """
+    Making the policy from the q(s, a) table
+    """
+    # Optimize it!!
+    PItable = create_pi_table()
+    Htable = QSAtable[0]; Stable = QSAtable[1]
+    for table_no in range(4):
+        for player_sum in range(32):
+            for dealer_card in range(10):
+                hval = Htable[table_no][player_sum][dealer_card]
+                sval = Stable[table_no][player_sum][dealer_card]
+                PItable[table_no][player_sum][dealer_card] = 'H' if hval > sval else 'S'
+
+    return PItable
 
 
 def index_table(Table, state):

@@ -80,13 +80,13 @@ class State:
         return "Player: " + printable_state(self.me) + "\nDealer: " + printable_state(self.dealer)
 
 
-class Action:
-    """
-    The Action class
-    """
-    def __init__ (self, action):
-        assert (action in ['H', 'S'])
-        self.action = action
+# class Action:
+#     """
+#     The Action class
+#     """
+#     def __init__ (self, action):
+#         assert (action in ['H', 'S'])
+#         self.action = action
 
 
 class GameEndError(Exception):
@@ -172,7 +172,8 @@ class Simulator:
             card, suite = self.draw()
             state.update_state (card, suite)
             player_sum = state.max_safe_sum()
-            if (player_sum < 0 or player_sum > 31):
+            assert (-1 <= player_sum <= 31)
+            if (player_sum == -1):
                 # Bust player
                 return state, -1, True
             else:
@@ -185,11 +186,13 @@ class Simulator:
         """
         # print ("Playing as dealer")
         dealer_sum = state.max_safe_sum(dealer=True)
+        assert (-1 <= dealer_sum <= 31)
         while (0 <= dealer_sum < 25):
             # Keep hitting
             card, suite = self.draw()
             state.update_state (card, suite, dealer=True)
             dealer_sum = state.max_safe_sum(dealer=True)
+            assert (-1 <= dealer_sum <= 31)
 
         return dealer_sum
 

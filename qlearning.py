@@ -34,12 +34,12 @@ def qlearning (sim, alpha=0.1, num_episodes=1000, interval=100, epsilon=0.1):
         sVal = index_qsa_table('S', QSAtable, state)
         return 'H' if hVal >= sVal else 'S'
 
-    total_reward = 0
     rewards = []
     for e in tqdm(range(num_episodes)):
         if e % interval == 0:
-            rewards.append(total_reward / (e + 1))
-            plot_QSAtable(QSAtable, show=True)
+            PItable = derive_pi_table (QSAtable)
+            rewards.append(play_game(sim, PItable))
+            # plot_QSAtable(QSAtable, show=True)
 
         S = generate_initial_state ()
         state = S.state_rep()
@@ -50,7 +50,6 @@ def qlearning (sim, alpha=0.1, num_episodes=1000, interval=100, epsilon=0.1):
 
             # Take action
             new_S, reward, done = sim.step(S, A)
-            total_reward += reward
 
             G = reward
             if not done:
@@ -70,8 +69,44 @@ def qlearning (sim, alpha=0.1, num_episodes=1000, interval=100, epsilon=0.1):
     return np.array(rewards)
 
 
-if __name__ == '__main__':
+def play_game (sim, PItable, num_games=1000):
+    """
+    Given a policy, play multiple games and return average reward
+    """
+
+    def generate_initial_state ():
+        try:
+            state = sim.reset()
+            return state
+        except GameEndError:
+            return generate_initial_state ()
+            
+    total_reward = 0
+    for g in range(num_games):
+        state = generate_initial_state ()
+        done = False
+    
+        while not done:
+            s = state.state_rep()
+            action = index_table(PItable, s)
+
+            # Take action
+            state, reward, done = sim.step(state, action)
+
+        total_reward += reward
+
+    return total_reward / num_games
+
+
+def qlearning_rewards():
+    # Create the simulator
     sim = Simulator()
-    r = qlearning (sim, num_episodes=1000001, interval=50000)
-    # r = qlearning (sim, num_episodes=10001, interval=1000)
-    print (r)
+
+    # Running Parameters
+    num_episodes = 10001 # Number of episodes in each run
+    interval = 100
+
+    return qlearning (sim, num_episodes=num_episodes, interval=interval)
+
+if __name__ == '__main__':
+    print (qlearning_rewards())
