@@ -7,10 +7,11 @@ import time
 from environment.simulator import Simulator, GameEndError
 from qpitables import *
 
-def sarsa (sim, k=1, alpha=0.1, num_episodes=100, interval=100, epsilon=0.1, decay=False):
+def sarsa (sim, k=1, alpha=0.1, num_episodes=100, interval=100, initial_epsilon=0.1, decay=False):
     """
     Learns and an optimal policy PI using SARSA
     """
+    epsilon = initial_epsilon
     assert (0 <= epsilon <= 1)
 
     # Empty Q(s, a) table
@@ -34,16 +35,16 @@ def sarsa (sim, k=1, alpha=0.1, num_episodes=100, interval=100, epsilon=0.1, dec
 
     rewards = []
     for e in tqdm(range(num_episodes)):
-        # print ("Episode %d" % e)
         if (e % interval == 0):
             PItable = derive_pi_table (QSAtable)
             rewards.append(play_game(sim, PItable))
-            # print (e)
             # Visualize
-            # print (QSAtable)
             # name = 'SARSA -- %d EPISODE' % e
             # plot_QSAtable(QSAtable, show=True)
-            # rewards_array.append(total_reward)
+
+        # Decay epsilon
+        if decay:
+            epsilon = initial_epsilon / (e // decay + 1)
 
         state_actions = []
 
@@ -58,10 +59,9 @@ def sarsa (sim, k=1, alpha=0.1, num_episodes=100, interval=100, epsilon=0.1, dec
             # Take action
             s, reward, done = sim.step(s, a)
             t += 1
-            # total_reward += reward
 
             # Perform update
-            def update(old_idx):
+            def update(old_idx, G):
                 old_state, old_a = state_actions[old_idx]#[t-k]
                 old_value = index_qsa_table(old_a, QSAtable, old_state)
                 new_value = old_value + alpha * (G - old_value)
@@ -69,13 +69,12 @@ def sarsa (sim, k=1, alpha=0.1, num_episodes=100, interval=100, epsilon=0.1, dec
                 modify_qsa_table(old_a, QSAtable, old_state, new_value)
             
             if done:
-                # print ('finale: ', reward)
                 G = reward
 
                 # update
                 past = k
                 while (past > 0 and t - past >= 0):
-                    update (t - past)
+                    update (t - past, G)
                     past -= 1
             else:
                 # Sample another action
@@ -86,10 +85,7 @@ def sarsa (sim, k=1, alpha=0.1, num_episodes=100, interval=100, epsilon=0.1, dec
 
                 # Update
                 if (t - k >= 0):
-                    update (t - k)
-
-
-        # print (state_actions)
+                    update (t - k, G)
 
     return np.array(rewards)
 
@@ -123,45 +119,31 @@ def play_game (sim, PItable, num_games=1000):
     return total_reward / num_games
 
 
-def sarsa_rewards():
+def sarsa_rewards(k=1, alpha=0.1, epsilon=0.1,
+                  num_episodes=10001, interval=100, decay=None):
     # Create the simulator
     sim = Simulator()
 
-    # Running Parameters
-    num_episodes = 100001 # Number of episodes in each run
-    interval = 1000
+    # # Running Parameters
+    # num_episodes = 100001 # Number of episodes in each run
+    # interval = 1000
 
-    return sarsa (sim, num_episodes=num_episodes, interval=interval)
+    return sarsa (sim, k=k, alpha=alpha, num_episodes=num_episodes,
+                 interval=interval, initial_epsilon=epsilon, decay=decay)
 
 if __name__ == '__main__':
-    print (sarsa_rewards())
+    # print (sarsa_rewards(num_episodes=10001, interval=100, decay=1000))
+    num_episodes = 100001
+    interval = 100
+    X = []; Y = []; labels = []
+    x = np.array([e for e in range(num_episodes) if e % interval == 0])
 
+    for k in [1, 3]:
+        Y.append( sarsa_rewards(k=k, num_episodes=num_episodes, interval=interval) )
+        X.append(x)
+        labels.append('k = %d' % k)
 
-# def sarsa_rewards (runs=10, k=1, alpha=0.1, interval=10, num_episodes=100):
-#     """
-#     Running SARSA multiple times and seeing how total reward changes with number of episodes
-#     """
-#     # Create simulator
-#     sim = Simulator()
+    plot_curves (X, Y, labels, title='SARSA learning with different k',
+                xlabel='Number of episodes', ylabel='Average test reward',
+                name='K-dist', path='plots/SARSA', show=True)
 
-#     Xs = list(range(0, num_episodes, interval))
-#     rewards = np.zeros(len(Xs))
-#     for r in tqdm(range(runs)):
-#         rew = sarsa (sim, k=k, alpha=alpha, num_episodes=num_episodes, interval=interval)
-#         # print (rew)
-#         rewards = (r / (r + 1)) * rewards + (1 / (r + 1)) * rew
-#     return rewards
-
-# if __name__ == '__main__':
-#     # Create the simulator
-#     sim = Simulator()
-
-#     # Running Parameters
-#     # runs = 100
-#     num_episodes = 1000 # Number of episodes in each run
-#     alpha = 0.1
-#     k = 3
-
-#     rewards = sarsa_rewards (runs=10, k=1, interval=100, num_episodes=1001)
-#     print (rewards)
-#     # sarsa (sim, k, alpha, num_episodes, epsilon=0.1)

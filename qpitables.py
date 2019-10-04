@@ -234,10 +234,20 @@ def plot_QSAtable (QSAtable, title='', path=None, name='QSA table', show=False):
     plt.close('all')
     
 
-def plot_curves (X=[], Y=[], colors=None):
-    for x, y in zip(X, Y):
-        plt.plot(x, y)
-    plt.show()
+def plot_curves (X=[], Y=[], labels=[], colors=None, 
+                 xlabel='', ylabel='', title='',
+                 name='', path=None, show=False):
+    for x, y, l in zip(X, Y, labels):
+        plt.plot(x, y, label=l)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
+    plt.legend()
+    if path is not None:
+        plt.savefig(os.path.join(path, name), dpi=100)
+    if show:
+        plt.show()
+    plt.close('all')
 
 if __name__ == '__main__':
     # Test the table generation

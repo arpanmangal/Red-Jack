@@ -98,15 +98,11 @@ def play_game (sim, PItable, num_games=1000):
     return total_reward / num_games
 
 
-def qlearning_rewards():
+def qlearning_rewards(alpha=0.1, epsilon=0.1, num_episodes=10001, interval=100):
     # Create the simulator
     sim = Simulator()
 
-    # Running Parameters
-    num_episodes = 10001 # Number of episodes in each run
-    interval = 100
-
-    return qlearning (sim, num_episodes=num_episodes, interval=interval)
+    return qlearning (sim, alpha=alpha, num_episodes=num_episodes, interval=interval, epsilon=epsilon)
 
 if __name__ == '__main__':
     print (qlearning_rewards())
