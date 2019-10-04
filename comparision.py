@@ -9,7 +9,8 @@ from sarsa import sarsa_rewards
 from qlearning import qlearning_rewards
 from tdlambda import tdlambda_rewards
 
-if __name__ == '__main__':
+
+def plot_num_episodes ():
     # num_episodes = 100001
     # interval = 1000
     # decay = 10000
@@ -32,3 +33,30 @@ if __name__ == '__main__':
     plot_curves (X, Y, labels, title='Comparision',
                 xlabel='Number of episodes', ylabel='Average test reward',
                 name='Algorithms', path='plots', show=True)
+
+def plot_alphas ():
+    num_episodes = 10001
+    interval = num_episodes - 1
+    decay = 1000
+
+    alphas = [0.1, 0.2, 0.3, 0.4, 0.5]
+    sarsa = []; sarsa_decay = []; qlearn = []; tdlambda = []
+
+    for alpha in alphas:
+        sarsa.append( sarsa_rewards (alpha=alpha, k = 1, num_episodes=num_episodes,
+                                    interval=interval) [-1] )
+        sarsa_decay.append( sarsa_rewards (alpha=alpha, k = 1, num_episodes=num_episodes,
+                                          interval=interval, decay=decay)[-1] )
+        qlearn.append( qlearning_rewards (alpha=alpha, num_episodes=num_episodes, interval=interval)[-1] )
+        tdlambda.append( tdlambda_rewards (alpha=alpha, num_episodes=num_episodes, interval=interval)[-1] )
+
+    X = [alphas] * 5
+    Y = [sarsa, sarsa_decay, qlearn, tdlambda]
+    labels = ['SARSA', 'SARSA_DECAY', 'QLEARN', 'TD Lambda']
+
+    plot_curves (X, Y, labels, title='Alphas',
+                xlabel='Alpha Value', ylabel='Average test reward',
+                name='alphas', path='plots', show=True)
+
+if __name__ == '__main__':
+    plot_alphas()
