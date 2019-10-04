@@ -37,17 +37,6 @@ def create_qsa_table ():
     Stable = create_q_table()
     Htable[:,:,:] = Stable[:,:,:] = 0
 
-    # Stable[:,:25,:] = -0.1; Htable[:,:25,:] = 0.1
-    # Htable[:25:,:] = 0.1; Htable[:,25:,:] = -0.1
-    # Stable[:,31,:] = 0.9; Htable[:,31,:] = -0.9
-
-    # Stable[:,:25,:] = -0.1; Stable[:,31,:] = 0.5
-    # Htable[:,25:,:] = -0.1; Htable[:,31,:] = -0.5
-    # Stable[:,25:,:] = 0.5; Stable[:,31,:] = 0.9
-    # Htable[:,:25,:] = 0.1; Stable[:,:25,:] = -0.1
-    # np.random.seed(0)
-    # Htable[:,:,:] = np.random.rand(4, 32, 10)
-    # Stable[:,:,:] = np.random.rand(4, 32, 10)
     return np.array([Htable, Stable])
 
 

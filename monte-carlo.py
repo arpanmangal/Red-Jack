@@ -23,7 +23,10 @@ def montecarlo (sim, PItable, first_visit=False, num_episodes=100):
         episode = generate_episode (sim, PItable)
         states, final_reward = episode
 
-        for state in states:
+        for idx, state in enumerate(states):
+            if (first_visit and state in states[:idx]):
+                continue
+
             old_value = index_table(Qtable, state)
             old_count = index_table(VisitCount, state)
 
@@ -74,9 +77,10 @@ if __name__ == '__main__':
 
     # Running Parameters
     runs = 1000
-    num_episodes = 10000 # Number of episodes in each run
+    num_episodes = 1000 # Number of episodes in each run
     PItable = create_pi_table ()
     plot='plots/MC' # Directory where to save plots
+    firstVisit = True
 
     # Visualizing the policy
     plot_PItable (PItable, title='Monte-Carlo policy', path=plot, name='MC Policy')
@@ -88,5 +92,5 @@ if __name__ == '__main__':
 
         Qtable = (r / (r+1)) * Qtable + (1 / (r+1)) * table_r
 
-    name = 'MC -- %d RUNS -- %d EPISODES' % (runs, num_episodes)
+    name = 'MC -- %d RUNS -- %d EPISODES -- First Visit - %s' % (runs, num_episodes, ('YES' if firstVisit else 'FASLE'))
     plot_Qtable(Qtable, title=name, path=plot, name=name)
