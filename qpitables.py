@@ -5,6 +5,7 @@ q(s, a) and pi(s) tables
 
 import numpy as np
 import os
+import matplotlib as mpl
 from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -160,32 +161,33 @@ def plot_Qtable (Qtable, title='', path=None, name='State Value', show=False):
 
 
 def plot_PItable (PItable, title='', path=None, name='Policy', show=False):
-    X = np.array( list(range(1,11))*32 ).reshape(32, 10)
-    Y = np.array( list(range(0,32))*10 ).reshape(10, 32).T
-
-    fig = plt.figure(figsize=(18.0, 15.0))
-    def plot_3d (X, Y, Z, title, loc=111):
-        ax = fig.add_subplot(loc, projection='3d')
-        surf = ax.plot_surface(X, Y, Z, cmap=cm.RdYlGn,
-                       linewidth=0, antialiased=False,
-                       vmin=0, vmax=1)
-        
-        ax.set_xlabel('Dealer Card')
-        ax.set_ylabel('Player max. sum')
-        ax.set_zlabel('Pi')
-        ax.set_zticks([0, 1])
-        ax.set_zlim([-1, 2])
-        ax.set_title(title)
-
     def int_table (pi_table):
-        meaning = lambda a: 0 if a == 'H' else 1
+        meaning = lambda a: -1 if a == 'H' else 1
         flattened = np.array(list(map(meaning, pi_table.flatten())))
         return flattened.reshape(32,10)
 
-    plot_3d (X, Y, int_table(PItable[0]), title="0 Special Cards Used", loc=221)
-    plot_3d (X, Y, int_table(PItable[1]), title="1 Special Cards Used", loc=222)
-    plot_3d (X, Y, int_table(PItable[2]), title="2 Special Cards Used", loc=223)
-    plot_3d (X, Y, int_table(PItable[3]), title="3 Special Cards Used", loc=224)
+    fig = plt.figure(figsize=(15.0, 8.0))
+    def plot_grid(Z, title, loc=111):
+        Z = Z.T
+        ax = fig.add_subplot(loc)
+        # make a color map of fixed colors
+        cmap = mpl.colors.ListedColormap(['r','lawngreen'])
+        bounds=[-6,0,6]
+        norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
+
+        # tell imshow about color map so that only set colors are used
+        img = ax.imshow(Z,interpolation='nearest',
+                            cmap = cmap,norm=norm)
+        ax.set_title(title)
+        ax.set_xlabel('Player max sum')
+        ax.set_xticks(list(range(0, 32)))#  np.arange(0, 1, step=0.2))
+        ax.set_ylabel('Dealer card')
+
+    # plot_grid(int_table(PItable[0]), title="ldfj")
+    plot_grid (int_table(PItable[0]), title="0 Special Cards Used", loc=221)
+    plot_grid (int_table(PItable[1]), title="1 Special Cards Used", loc=222)
+    plot_grid (int_table(PItable[2]), title="2 Special Cards Used", loc=223)
+    plot_grid (int_table(PItable[3]), title="3 Special Cards Used", loc=224)
 
     plt.suptitle(title)
 
@@ -194,6 +196,7 @@ def plot_PItable (PItable, title='', path=None, name='Policy', show=False):
     if show:
         plt.show()
     plt.close('all')
+
 
 def plot_QSAtable (QSAtable, title='', path=None, name='QSA table', show=False):
     Htable = QSAtable[0]; Stable = QSAtable[1]

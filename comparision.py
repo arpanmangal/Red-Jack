@@ -36,9 +36,9 @@ def plot_num_episodes ():
                 name='Algorithms %d' % num_episodes, path='plots', show=True)
 
 def plot_alphas ():
-    num_episodes = 10001
+    num_episodes = 100001
     interval = num_episodes - 1
-    decay = 1000
+    decay = 10000
 
     alphas = [0.1, 0.2, 0.3, 0.4, 0.5]
     sarsa = []; sarsa_decay = []; qlearn = []; tdlambda = []; tdlambda_decay = []
@@ -58,8 +58,8 @@ def plot_alphas ():
 
     plot_curves (X, Y, labels, title='Alphas',
                 xlabel='Alpha Value', ylabel='Average test reward',
-                name='alphas', path='plots', show=True)
+                name='alphas %d' % num_episodes, path='plots', show=True)
 
 if __name__ == '__main__':
-    # plot_alphas()
-    plot_num_episodes()
+    plot_alphas()
+    # plot_num_episodes()

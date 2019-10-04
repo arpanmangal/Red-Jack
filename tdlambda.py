@@ -10,8 +10,9 @@ from tqdm import tqdm
 import time
 from environment.simulator import Simulator, GameEndError
 from qpitables import *
+from montecarlo import montecarlo
 
-def tdlambda (sim, l=0.5, alpha=0.5, num_episodes=1001, interval=100, initial_epsilon=0.1, decay=False):
+def tdlambda (sim, l=0.5, alpha=0.5, num_episodes=1001, interval=100, initial_epsilon=0.1, decay=False, return_qsa=False):
     """
     Learn optimal policy using TD-Lambda
     """
@@ -84,6 +85,9 @@ def tdlambda (sim, l=0.5, alpha=0.5, num_episodes=1001, interval=100, initial_ep
             new_value = old_value + alpha * (Gt - old_value)
             modify_qsa_table (action, QSAtable, state, new_value)
 
+    if return_qsa:
+        return QSAtable
+
     return np.array(rewards)
 
 
@@ -127,4 +131,23 @@ def tdlambda_rewards (l=0.5, alpha=0.1, epsilon=0.1,
 
 
 if __name__ == '__main__':
-    print (tdlambda_rewards())
+    # Create the simulator
+    sim = Simulator()
+
+    num_episodes = 1000001
+    interval = num_episodes - 1
+    decay = num_episodes / 10
+
+    QSAtable = tdlambda(sim, l=0.5, alpha=0.1, initial_epsilon=0.1,
+                         num_episodes=num_episodes, interval=interval, decay=decay, return_qsa=True)
+    plot_QSAtable (QSAtable, title='q(s, a) values for TD Lambda(0.5)', path='plots/tdlambda',
+                    name='QSA %d' % num_episodes, show=False)
+
+    PItable = derive_pi_table (QSAtable)
+    plot_PItable (PItable, title='Optimal Policy using TD Lambda(0.5)', path='plots/tdlambda',
+                    name='PI %d' % num_episodes, show=False)
+
+    # Evaluating the policy
+    Qtable = montecarlo (sim, PItable, num_episodes=500000)
+    plot_Qtable(Qtable, title='V(s) values for TD Lambda(0.5)', path='plots/tdlambda',
+                name='V %d' % num_episodes, show=False)
