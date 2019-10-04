@@ -7,7 +7,7 @@ import time
 from environment.simulator import Simulator, GameEndError
 from qpitables import *
 
-def sarsa (sim, k=1, alpha=0.1, num_episodes=100, interval=100, initial_epsilon=0.1, decay=False):
+def sarsa (sim, k=1, alpha=0.1, num_episodes=1001, interval=100, initial_epsilon=0.1, decay=False):
     """
     Learns and an optimal policy PI using SARSA
     """
@@ -24,14 +24,32 @@ def sarsa (sim, k=1, alpha=0.1, num_episodes=100, interval=100, initial_epsilon=
         except GameEndError:
             return generate_initial_state ()
 
-    def epsilon_greedy (state):
-        hVal = index_qsa_table('H', QSAtable, state)
-        sVal = index_qsa_table('S', QSAtable, state)
+    def generate_episode ():
+        """
+        Generate an episode based on current QSA values
+        """
+        def epsilon_greedy (state):
+            hVal = index_qsa_table('H', QSAtable, state)
+            sVal = index_qsa_table('S', QSAtable, state)
 
-        if (np.random.rand() > epsilon):
-            return 'H' if hVal >= sVal else 'S'
-        else:
-            return 'S' if hVal > sVal else 'H'
+            if (np.random.rand() > epsilon):
+                return 'H' if hVal >= sVal else 'S'
+            else:
+                return 'S' if hVal > sVal else 'H'
+
+        states = []
+        state = generate_initial_state ()
+        done = False
+
+        while not done:
+            state_rep = state.state_rep()
+            action = epsilon_greedy (state_rep)
+            states.append ((state_rep, action))
+
+            # Take the action
+            state, reward, done = sim.step(state, action)
+
+        return states, reward
 
     rewards = []
     for e in tqdm(range(num_episodes)):
@@ -46,46 +64,22 @@ def sarsa (sim, k=1, alpha=0.1, num_episodes=100, interval=100, initial_epsilon=
         if decay:
             epsilon = initial_epsilon / (e // decay + 1)
 
-        state_actions = []
+        states, final_reward = generate_episode()
+        assert (len(states)) > 0
 
-        t = 0
-        s = generate_initial_state()
-        state = s.state_rep()
-        a = epsilon_greedy(state)
-        done = False
-        state_actions.append((state, a))
-
-        while not done:
-            # Take action
-            s, reward, done = sim.step(s, a)
-            t += 1
-
-            # Perform update
-            def update(old_idx, G):
-                old_state, old_a = state_actions[old_idx]#[t-k]
-                old_value = index_qsa_table(old_a, QSAtable, old_state)
-                new_value = old_value + alpha * (G - old_value)
-
-                modify_qsa_table(old_a, QSAtable, old_state, new_value)
-            
-            if done:
-                G = reward
-
-                # update
-                past = k
-                while (past > 0 and t - past >= 0):
-                    update (t - past, G)
-                    past -= 1
+        for idx, state in enumerate(states):
+            if idx + k < len(states):
+                future_s, future_a = states[idx+k]
+                G = index_qsa_table(future_a, QSAtable, future_s)
             else:
-                # Sample another action
-                state = s.state_rep()
-                a = epsilon_greedy (state)
-                state_actions.append((state, a))
-                G = index_qsa_table(a, QSAtable, state)
+                G = final_reward
 
-                # Update
-                if (t - k >= 0):
-                    update (t - k, G)
+            s, a = state
+            old_value = index_qsa_table (a, QSAtable, s)
+            new_value = old_value + alpha * (G - old_value)
+
+            # Update the values
+            modify_qsa_table (a, QSAtable, s, new_value)
 
     return np.array(rewards)
 
@@ -124,21 +118,17 @@ def sarsa_rewards(k=1, alpha=0.1, epsilon=0.1,
     # Create the simulator
     sim = Simulator()
 
-    # # Running Parameters
-    # num_episodes = 100001 # Number of episodes in each run
-    # interval = 1000
-
     return sarsa (sim, k=k, alpha=alpha, num_episodes=num_episodes,
                  interval=interval, initial_epsilon=epsilon, decay=decay)
 
 if __name__ == '__main__':
     # print (sarsa_rewards(num_episodes=10001, interval=100, decay=1000))
     num_episodes = 100001
-    interval = 100
+    interval = 10000
     X = []; Y = []; labels = []
     x = np.array([e for e in range(num_episodes) if e % interval == 0])
 
-    for k in [1, 3]:
+    for k in [1, 3, 10, 100]:
         Y.append( sarsa_rewards(k=k, num_episodes=num_episodes, interval=interval) )
         X.append(x)
         labels.append('k = %d' % k)
