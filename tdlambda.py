@@ -11,10 +11,12 @@ import time
 from environment.simulator import Simulator, GameEndError
 from qpitables import *
 
-def tdlambda (sim, l=0.5, alpha=0.5, num_episodes=1001, interval=100, epsilon=0.1):
+def tdlambda (sim, l=0.5, alpha=0.5, num_episodes=1001, interval=100, initial_epsilon=0.1, decay=False):
     """
     Learn optimal policy using TD-Lambda
     """
+    epsilon = initial_epsilon
+
     # Creating a q(s,a) table
     QSAtable = create_qsa_table()
 
@@ -59,6 +61,10 @@ def tdlambda (sim, l=0.5, alpha=0.5, num_episodes=1001, interval=100, epsilon=0.
             PItable = derive_pi_table (QSAtable)
             rewards.append(play_game(sim, PItable))
             # plot_QSAtable(QSAtable, show=True)
+
+        # Decay epsilon
+        if decay:
+            epsilon = initial_epsilon / (e // decay + 1)
 
         states, final_reward = generate_episode ()
         assert (len(states) > 0)
@@ -111,12 +117,13 @@ def play_game (sim, PItable, num_games=1000):
     return total_reward / num_games
 
 
-def tdlambda_rewards (l=0.5, alpha=0.1, epsilon=0.1, num_episodes=10001, interval=1000):
+def tdlambda_rewards (l=0.5, alpha=0.1, epsilon=0.1,
+                      num_episodes=10001, interval=1000, decay=None):
     # Create the simulator
     sim = Simulator()
 
-    return tdlambda(sim, l=l, alpha=alpha, epsilon=epsilon,
-                     num_episodes=num_episodes, interval=interval)
+    return tdlambda(sim, l=l, alpha=alpha, initial_epsilon=epsilon,
+                     num_episodes=num_episodes, interval=interval, decay=decay)
 
 
 if __name__ == '__main__':
